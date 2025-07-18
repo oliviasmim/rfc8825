@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apresentação: RFC 8825 - WebRTC (Versão Estendida)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            transition: transform 0.6s ease-in-out, opacity 0.6s ease-in-out;
+            transform: translateX(100%);
+            opacity: 0;
+            padding: 4rem 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .slide.active {
+            transform: translateX(0);
+            opacity: 1;
+            z-index: 10;
+        }
+        .slide.previous {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+        .animated-item {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+        .active .animated-item {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .btn-nav {
+            background-color: rgba(0,0,0,0.5);
+            color: white;
+            border-radius: 9999px;
+            width: 3rem;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s;
+        }
+        .btn-nav:hover {
+            background-color: rgba(0,0,0,0.7);
+        }
+        .trapezoid-diagram {
+            font-family: monospace, monospace;
+            white-space: pre;
+            background-color: #f3f4f6;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: left;
+            overflow-x: auto;
+        }
+        .diagram-box {
+            background-color: white;
+            border: 2px solid;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            height: 100%;
+        }
+        .connection-flow > div {
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.5s ease-in-out;
+        }
+        .active .connection-flow > div {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .code-block {
+            background-color: #282c34;
+            color: #abb2bf;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            text-align: left;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .code-block .keyword { color: #c678dd; }
+        .code-block .function { color: #61afef; }
+        .code-block .string { color: #98c379; }
+        .code-block .comment { color: #5c6370; }
+        .code-block .variable { color: #e06c75; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div id="presentation-container" class="relative w-full h-screen">
+
+        <!-- Slide 1: Título -->
+        <div class="slide active" data-slide="1">
+            <div class="text-center">
+                <h1 class="text-5xl md:text-6xl font-bold text-blue-600 mb-4 animated-item">RFC 8825: Visão Geral</h1>
+                <p class="text-2xl md:text-3xl text-gray-600 mb-6 animated-item" style="transition-delay: 0.2s;">Protocolos em Tempo Real para Aplicações Baseadas em Navegador (WebRTC)</p>
+                <p class="text-xl text-gray-500 animated-item" style="transition-delay: 0.4s;">Seu guia para entender o coração da comunicação em tempo real na web.</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: Introdução -->
+        <div class="slide" data-slide="2">
+            <div class="w-full max-w-4xl">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-8 animated-item">A Jornada da Comunicação em Tempo Real</h2>
+                <ul class="space-y-4 text-lg text-left">
+                    <li class="p-4 bg-white rounded-lg shadow-md animated-item" style="transition-delay: 0.2s;"><strong>Visão Inicial:</strong> A Internet sempre foi vista como um veículo para aplicações interativas como áudio e vídeo.</li>
+                    <li class="p-4 bg-white rounded-lg shadow-md animated-item" style="transition-delay: 0.4s;"><strong>Primeiros Desafios:</strong> Exigiam hardware e software caros e especializados, com baixa qualidade.</li>
+                    <li class="p-4 bg-white rounded-lg shadow-md animated-item" style="transition-delay: 0.6s;"><strong>Evolução:</strong> Aumento da largura de banda e processadores mais rápidos diminuíram as barreiras.</li>
+                    <li class="p-4 bg-white rounded-lg shadow-md animated-item" style="transition-delay: 0.8s;"><strong>Barreiras Persistentes:</strong> Faltava um conjunto único de protocolos para comunicação universal.</li>
+                    <li class="p-4 bg-white rounded-lg shadow-md animated-item" style="transition-delay: 1s;"><strong>A Solução:</strong> Aplicações web (Web Applications) e a padronização via HTML5, eliminando a necessidade de plugins.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 3: O Que é o RFC 8825? -->
+        <div class="slide" data-slide="3">
+             <div class="w-full max-w-4xl">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-8 animated-item">O Que é o RFC 8825?</h2>
+                <div class="grid md:grid-cols-2 gap-6 text-lg">
+                    <div class="p-6 bg-blue-100 rounded-lg shadow-md animated-item" style="transition-delay: 0.2s;">
+                        <h3 class="font-bold text-xl mb-2">Declaração de Aplicabilidade</h3>
+                        <p>Não especifica um protocolo, mas sim quais especificações devem ser seguidas para compatibilidade com WebRTC.</p>
+                    </div>
+                    <div class="p-6 bg-green-100 rounded-lg shadow-md animated-item" style="transition-delay: 0.4s;">
+                        <h3 class="font-bold text-xl mb-2">Padrão da Internet</h3>
+                        <p>Publicado em Janeiro de 2021 pela IETF, representa o consenso da comunidade.</p>
+                    </div>
+                    <div class="p-6 bg-yellow-100 rounded-lg shadow-md animated-item" style="transition-delay: 0.6s;">
+                        <h3 class="font-bold text-xl mb-2">Ponto de Coordenação</h3>
+                        <p>Garante que todas as partes necessárias para o WebRTC sejam encontráveis e bem especificadas.</p>
+                    </div>
+                    <div class="p-6 bg-red-100 rounded-lg shadow-md animated-item" style="transition-delay: 0.8s;">
+                        <h3 class="font-bold text-xl mb-2">Mapa Rodoviário</h3>
+                        <p>É o guia para as especificações WebRTC, definindo termos e apontando para outros documentos.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: API vs. Protocolo -->
+        <div class="slide" data-slide="4">
+            <div class="w-full max-w-5xl text-center">
+                <h2 class="text-3xl md:text-4xl font-bold mb-8 animated-item">WebRTC: API vs. Protocolo – Uma Colaboração Essencial</h2>
+                <div class="flex flex-col md:flex-row gap-8 text-left">
+                    <div class="flex-1 p-6 bg-white rounded-lg shadow-xl animated-item" style="transition-delay: 0.2s;">
+                        <h3 class="text-2xl font-bold text-blue-700 mb-4">IETF: Especificação de Protocolo</h3>
+                        <p class="text-lg">O RFC 8825 e documentos relacionados focam em especificar os <strong>protocolos e subprotocolos</strong> para as interações na rede. É o "como" a comunicação acontece "no fio".</p>
+                    </div>
+                    <div class="flex-1 p-6 bg-white rounded-lg shadow-xl animated-item" style="transition-delay: 0.4s;">
+                        <h3 class="text-2xl font-bold text-green-700 mb-4">W3C: Especificação de API</h3>
+                        <p class="text-lg">Os grupos de trabalho do W3C focam em criar as <strong>APIs JavaScript padronizadas</strong> que os desenvolvedores usam no navegador para acessar as funcionalidades do WebRTC.</p>
+                    </div>
+                </div>
+                <div class="mt-8 p-6 bg-indigo-100 rounded-lg shadow-inner animated-item" style="transition-delay: 0.6s;">
+                    <h3 class="text-2xl font-bold text-indigo-800 mb-2">Interoperabilidade Total</h3>
+                    <p class="text-lg">A meta é que para cada recurso do protocolo, exista uma chamada de API correspondente, e vice-versa, garantindo uma integração perfeita.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 5: O que é WebRTC? -->
+        <div class="slide" data-slide="5">
+            <div class="w-full max-w-4xl">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-6 animated-item">Afinal, o que é WebRTC?</h2>
+                <p class="text-xl mb-10 animated-item" style="transition-delay: 0.2s;">WebRTC (Web Real-Time Communication) é uma tecnologia <strong>gratuita e de código aberto</strong> que fornece aos navegadores e aplicativos móveis recursos de comunicação em tempo real (RTC) por meio de APIs simples.</p>
+                <div class="grid md:grid-cols-3 gap-8 text-lg">
+                    <div class="flex flex-col items-center animated-item" style="transition-delay: 0.4s;">
+                        <svg class="w-20 h-20 text-blue-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+                        <h3 class="font-bold text-2xl">Áudio</h3>
+                        <p>Comunicação por voz de alta qualidade e baixa latência.</p>
+                    </div>
+                    <div class="flex flex-col items-center animated-item" style="transition-delay: 0.6s;">
+                        <svg class="w-20 h-20 text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        <h3 class="font-bold text-2xl">Vídeo</h3>
+                        <p>Videochamadas diretamente no navegador, sem plugins.</p>
+                    </div>
+                    <div class="flex flex-col items-center animated-item" style="transition-delay: 0.8s;">
+                        <svg class="w-20 h-20 text-purple-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h.01M12 7h.01M16 7h.01M9 17h6M9 13h6M12 10h.01M4 7a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V7z"></path></svg>
+                        <h3 class="font-bold text-2xl">Dados</h3>
+                        <p>Troca de arquivos e dados arbitrários de forma P2P.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SLIDE 6: 3 Pilares da API -->
+        <div class="slide" data-slide="6">
+            <div class="w-full max-w-5xl">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-10 animated-item">Os 3 Pilares da API WebRTC</h2>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="diagram-box border-blue-500 animated-item" style="transition-delay: 0.2s;">
+                        <h3 class="text-2xl font-bold text-blue-600 mb-2">MediaStream</h3>
+                        <p class="text-lg">(<code>getUserMedia</code>)</p>
+                        <p class="mt-4">Permite que a aplicação acesse a câmera, microfone ou até mesmo a tela do usuário.</p>
+                    </div>
+                    <div class="diagram-box border-green-500 animated-item" style="transition-delay: 0.4s;">
+                        <h3 class="text-2xl font-bold text-green-600 mb-2">RTCPeerConnection</h3>
+                        <p class="text-lg">O "Coração" do WebRTC</p>
+                        <p class="mt-4">Gerencia toda a complexidade de criar e manter uma conexão P2P estável e eficiente.</p>
+                    </div>
+                    <div class="diagram-box border-purple-500 animated-item" style="transition-delay: 0.6s;">
+                        <h3 class="text-2xl font-bold text-purple-600 mb-2">RTCDataChannel</h3>
+                        <p class="text-lg">Canal de Dados Genérico</p>
+                        <p class="mt-4">Permite o envio de qualquer tipo de dado (texto, arquivos, etc.) com baixa latência.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 7: Mágica da Conexão -->
+        <div class="slide" data-slide="7">
+            <div class="w-full max-w-6xl">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-8 animated-item">A Mágica da Conexão P2P (Simplificada)</h2>
+                <div class="connection-flow flex flex-col md:flex-row items-center justify-around w-full gap-4 text-lg">
+                    <div class="text-center" style="transition-delay: 0.2s;">
+                        <div class="text-6xl mb-2">💻</div>
+                        <div>Navegador A</div>
+                    </div>
+                    <div class="flex flex-col items-center" style="transition-delay: 0.4s;">
+                        <div class="font-bold text-blue-600">1. Sinalização</div>
+                        <div class="text-4xl my-2">⬍</div>
+                        <div class="p-2 bg-gray-200 rounded-lg">🏢 Servidor</div>
+                        <p class="text-sm mt-1">(Troca de "convites")</p>
+                    </div>
+                     <div class="text-center" style="transition-delay: 0.2s;">
+                        <div class="text-6xl mb-2">💻</div>
+                        <div>Navegador B</div>
+                    </div>
+                </div>
+                <div class="connection-flow flex items-center justify-center w-full gap-8 mt-8">
+                    <div class="text-center" style="transition-delay: 0.6s;">
+                        <div class="font-bold text-orange-500">2. Descoberta (ICE)</div>
+                        <p>Encontra o melhor caminho entre os pares.</p>
+                    </div>
+                    <div class="text-4xl" style="transition-delay: 0.8s;">→</div>
+                    <div class="text-center" style="transition-delay: 1.0s;">
+                        <div class="font-bold text-red-500">3. Segurança (DTLS)</div>
+                        <p>Estabelece um "túnel" seguro.</p>
+                    </div>
+                    <div class="text-4xl" style="transition-delay: 1.2s;">→</div>
+                    <div class="text-center" style="transition-delay: 1.4s;">
+                        <div class="font-bold text-green-500">4. Comunicação (SRTP)</div>
+                        <p>Mídia e dados fluem diretamente!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 8: Vantagens -->
+        <div class="slide" data-slide="8">
+            <div class="w-full max-w-4xl">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-8 animated-item">Por que Usar WebRTC? As Vantagens</h2>
+                <ul class="space-y-4 text-xl text-left mx-auto max-w-2xl">
+                    <li class="flex items-start p-3 bg-white rounded-lg shadow-md animated-item" style="transition-delay: 0.2s;">
+                        <span class="text-green-500 mr-4">✔️</span> <span><strong>Sem Plugins:</strong> Funciona nativamente no navegador, sem necessidade de instalar Flash ou outros softwares.</span>
+                    </li>
+                    <li class="flex items-start p-3 bg-white rounded-lg shadow-md animated-item" style="transition-delay: 0.4s;">
+                        <span class="text-green-500 mr-4">✔️</span> <span><strong>Alta Performance:</strong> A conexão P2P resulta em menor latência e maior qualidade para áudio e vídeo.</span>
+                    </li>
+                    <li class="flex items-start p-3 bg-white rounded-lg shadow-md animated-item" style="transition-delay: 0.6s;">
+                        <span class="text-green-500 mr-4">✔️</span> <span><strong>Seguro por Padrão:</strong> Toda comunicação WebRTC é obrigatoriamente criptografada (DTLS/SRTP).</span>
+                    </li>
+                    <li class="flex items-start p-3 bg-white rounded-lg shadow-md animated-item" style="transition-delay: 0.8s;">
+                        <span class="text-green-500 mr-4">✔️</span> <span><strong>Multiplataforma:</strong> Suportado pelos principais navegadores em desktops e dispositivos móveis.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- NOVO SLIDE 9: WebRTC no Mundo Real -->
+        <div class="slide" data-slide="9">
+            <div class="w-full max-w-5xl">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-10 animated-item">WebRTC no Mundo Real: Quem Usa?</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-10 items-center justify-center">
+                    <div class="flex flex-col items-center animated-item" style="transition-delay: 0.2s;">
+                        <img src="https://www.gstatic.com/images/branding/product/1x/meet_2020q4_48dp.png" alt="Google Meet Logo" class="h-20 mb-2"/>
+                        <p class="font-bold text-xl">Google Meet</p>
+                    </div>
+                    <div class="flex flex-col items-center animated-item" style="transition-delay: 0.4s;">
+                        <img src="https://e7.pngegg.com/pngimages/842/992/png-clipart-discord-computer-servers-teamspeak-discord-icon-video-game-smiley-thumbnail.png" alt="Discord Logo" class="h-20 mb-2"/>
+                        <p class="font-bold text-xl">Discord</p>
+                    </div>
+                    <div class="flex flex-col items-center animated-item" style="transition-delay: 0.6s;">
+                        <img src="https://www.citypng.com/public/uploads/preview/hd-outline-new-facebook-messenger-icon-logo-png-701751695120316dd0dskupc6.png" alt="Messenger Logo" class="h-20 mb-2"/>
+                        <p class="font-bold text-xl">Messenger</p>
+                    </div>
+                    <div class="flex flex-col items-center animated-item" style="transition-delay: 0.8s;">
+                        <img src="https://pngimg.com/d/whatsapp_PNG21.png" alt="WhatsApp Logo" class="h-20 mb-2"/>
+                        <p class="font-bold text-xl">WhatsApp</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NOVO SLIDE 10: Bibliotecas -->
+        <div class="slide" data-slide="10">
+            <div class="w-full max-w-5xl">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-6 animated-item">Abstraindo a Complexidade: Bibliotecas</h2>
+                <p class="text-xl mb-8 animated-item" style="transition-delay: 0.2s;">A API nativa do WebRTC é poderosa, mas verbosa. Bibliotecas simplificam o processo.</p>
+                <div class="grid md:grid-cols-1 gap-8 text-left">
+                    <div class="diagram-box border-gray-400 animated-item" style="transition-delay: 0.4s;">
+                        <h3 class="font-bold text-xl mb-4">Exemplo com PeerJS</h3>
+                        <div class="code-block">
+                            <span class="comment">// Conectar a outro peer</span><br>
+                            <span class="keyword">const</span> <span class="variable">conn</span> = <span class="variable">peer</span>.<span class="function">connect</span>(<span class="string">'ID_DO_OUTRO_PEER'</span>);<br>
+                            <span class="variable">conn</span>.<span class="function">on</span>(<span class="string">'open'</span>, () => {<br>
+                            &nbsp;&nbsp;<span class="variable">conn</span>.<span class="function">send</span>(<span class="string">'Olá!'</span>);<br>
+                            });
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NOVO SLIDE 11: Sinalização com Firebase -->
+        <div class="slide" data-slide="11">
+            <div class="w-full max-w-6xl">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-8 animated-item">O Papel do Firebase na Sinalização</h2>
+                <p class="text-xl mb-8 animated-item" style="transition-delay: 0.2s;">WebRTC precisa de um "carteiro" para entregar os convites (sinais). O Firestore é perfeito para isso.</p>
+                <div class="flex flex-col md:flex-row items-center justify-center gap-8 w-full">
+                    <div class="text-center animated-item" style="transition-delay: 0.4s;">
+                        <div class="text-6xl mb-2">💻</div>
+                        <div class="font-bold">Peer A</div>
+                    </div>
+                    <div class="flex flex-col items-center text-center gap-2">
+                        <div class="animated-item" style="transition-delay: 0.6s;">1. Envia Oferta ➡️</div>
+                        <div class="animated-item" style="transition-delay: 1.2s;">⬅️ 4. Recebe Resposta</div>
+                    </div>
+                    <div class="flex flex-col items-center animated-item" style="transition-delay: 0.8s;">
+                         <img src="https://e7.pngegg.com/pngimages/119/167/png-clipart-firebase-cloud-messaging-google-developers-software-development-kit-google-angle-triangle.png" alt="Firebase Logo" class="h-24 w-24"/>
+                        <div class="font-bold mt-2">Cloud Firestore</div>
+                        <p>(Banco de Dados em Tempo Real)</p>
+                    </div>
+                     <div class="flex flex-col items-center text-center gap-2">
+                        <div class="animated-item" style="transition-delay: 1.0s;">⬅️ 2. Recebe Oferta</div>
+                        <div class="animated-item" style="transition-delay: 1.4s;">3. Envia Resposta ➡️</div>
+                    </div>
+                    <div class="text-center animated-item" style="transition-delay: 0.4s;">
+                        <div class="text-6xl mb-2">💻</div>
+                        <div class="font-bold">Peer B</div>
+                    </div>
+                </div>
+                 <div class="mt-8 text-green-600 font-bold text-2xl animated-item" style="transition-delay: 1.6s;">5. Conexão P2P Direta Estabelecida! 🤝</div>
+            </div>
+        </div>
+        
+        <!-- NOVO SLIDE 12: Pseudocódigo com Firebase -->
+        <div class="slide" data-slide="12">
+            <div class="w-full max-w-4xl">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-6 animated-item">Pseudocódigo: WebRTC + Firebase</h2>
+                <div class="code-block text-left text-base animated-item" style="transition-delay: 0.2s;">
+                    <span class="comment">// 1. Peer A (Iniciador) cria uma oferta</span><br>
+                    <span class="variable">peerA</span>.<span class="function">on</span>(<span class="string">'signal'</span>, <span class="variable">oferta</span> => {<br>
+                    &nbsp;&nbsp;<span class="function">db</span>.<span class="function">collection</span>(<span class="string">'chamadas'</span>).<span class="function">doc</span>(<span class="string">'id_da_chamada'</span>).<span class="function">set</span>({ <span class="variable">oferta</span> });<br>
+                    });<br><br>
+                    <span class="comment">// 2. Peer B escuta por ofertas</span><br>
+                    <span class="function">db</span>.<span class="function">collection</span>(<span class="string">'chamadas'</span>).<span class="function">doc</span>(<span class="string">'id_da_chamada'</span>).<span class="function">onSnapshot</span>(<span class="variable">snap</span> => {<br>
+                    &nbsp;&nbsp;<span class="keyword">if</span> (<span class="variable">snap</span>.<span class="function">data</span>().<span class="variable">oferta</span>) {<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="variable">peerB</span>.<span class="function">signal</span>(<span class="variable">snap</span>.<span class="function">data</span>().<span class="variable">oferta</span>);<br>
+                    &nbsp;&nbsp;}<br>
+                    });<br><br>
+                    <span class="comment">// 3. Peer B cria uma resposta</span><br>
+                    <span class="variable">peerB</span>.<span class="function">on</span>(<span class="string">'signal'</span>, <span class="variable">resposta</span> => {<br>
+                    &nbsp;&nbsp;<span class="function">db</span>.<span class="function">collection</span>(<span class="string">'chamadas'</span>).<span class="function">doc</span>(<span class="string">'id_da_chamada'</span>).<span class="function">update</span>({ <span class="variable">resposta</span> });<br>
+                    });<br><br>
+                    <span class="comment">// 4. Peer A recebe a resposta e conecta</span><br>
+                    <span class="comment">// (Escutando o mesmo documento)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: Arquitetura WebRTC -->
+        <div class="slide" data-slide="13">
+            <div class="w-full max-w-6xl">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-6 animated-item">Arquitetura WebRTC: O Modelo Trapezoidal</h2>
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div class="animated-item" style="transition-delay: 0.2s;">
+                        <div class="trapezoid-diagram text-sm">
++----------+                    +----------+
+|   Web    |----Signaling Path---|   Web    |
+|  Server  |                    |  Server  |
++----------+                    +----------+
+    |    \                      /    |
+    |     \ Application-defined    /     |
+    |      \      over           /      |
+    |       \  HTTPS/WebSockets /       |
+    |        \                  /        |
++-------------+              +-------------+
+| JS/HTML/CSS |              | JS/HTML/CSS |
++-------------+              +-------------+
+|   Browser   |----Media Path----|   Browser   |
++-------------+              +-------------+
+                        </div>
+                    </div>
+                    <div class="space-y-4 text-lg animated-item text-left" style="transition-delay: 0.4s;">
+                        <div class="p-4 bg-red-100 border-l-4 border-red-500">
+                            <h3 class="font-bold">Caminho de Mídia ("Low Path")</h3>
+                            <p>Vai <strong>DIRETAMENTE</strong> entre os navegadores. É o caminho dos dados de áudio/vídeo/etc. DEVE seguir os protocolos WebRTC.</p>
+                        </div>
+                        <div class="p-4 bg-blue-100 border-l-4 border-blue-500">
+                            <h3 class="font-bold">Caminho de Sinalização ("High Path")</h3>
+                            <p>Passa por servidores para negociação. A escolha do protocolo (ex: SIP, XMPP, WebSocket) está <strong>FORA DO ESCOPO</strong> do WebRTC.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 14: Grupos de Funcionalidade (1) -->
+        <div class="slide" data-slide="14">
+            <div class="w-full max-w-4xl text-left">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-8 animated-item">Grupos de Funcionalidade (De Baixo para Cima)</h2>
+                <div class="space-y-6">
+                    <div class="p-6 bg-white rounded-lg shadow-lg animated-item" style="transition-delay: 0.2s;">
+                        <h3 class="text-2xl font-bold text-teal-600 mb-2">1. Transporte de Dados</h3>
+                        <p class="text-lg">Como os dados viajam: configuração de conexões seguras (ICE), controle de congestionamento, etc.</p>
+                        <p class="mt-2 text-sm font-mono bg-gray-200 p-2 rounded"><strong>Requisito:</strong> Implementar os protocolos do <span class="font-bold">RFC 8835</span>.</p>
+                    </div>
+                    <div class="p-6 bg-white rounded-lg shadow-lg animated-item" style="transition-delay: 0.4s;">
+                        <h3 class="text-2xl font-bold text-purple-600 mb-2">2. Enquadramento e Segurança dos Dados</h3>
+                        <p class="text-lg">Como os dados são empacotados e protegidos: RTP para mídia, SCTP para dados, e DTLS para segurança.</p>
+                        <p class="mt-2 text-sm font-mono bg-gray-200 p-2 rounded"><strong>Requisito:</strong> SRTP é <strong>OBRIGATÓRIO</strong>. Implementar <span class="font-bold">RFC 8834</span> (mídia), <span class="font-bold">RFC 8826</span> (segurança) e <span class="font-bold">RFC 8827</span> (arquitetura de segurança).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 15: Grupos de Funcionalidade (2) -->
+        <div class="slide" data-slide="15">
+            <div class="w-full max-w-4xl text-left">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-8 animated-item">Grupos de Funcionalidade (Continuação)</h2>
+                <div class="space-y-6">
+                    <div class="p-6 bg-white rounded-lg shadow-lg animated-item" style="transition-delay: 0.2s;">
+                        <h3 class="text-2xl font-bold text-orange-600 mb-2">3. Formatos de Dados</h3>
+                        <p class="text-lg">Os "idiomas" da comunicação: codecs de áudio e vídeo, formatos de dados e como descrevê-los (SDP).</p>
+                        <p class="mt-2 text-sm font-mono bg-gray-200 p-2 rounded"><strong>Requisito:</strong> Implementar os codecs e perfis dos <span class="font-bold">RFC 7874</span> (áudio) e <span class="font-bold">RFC 7742</span> (vídeo).</p>
+                    </div>
+                    <div class="p-6 bg-white rounded-lg shadow-lg animated-item" style="transition-delay: 0.4s;">
+                        <h3 class="text-2xl font-bold text-cyan-600 mb-2">4. Gerenciamento de Conexão</h3>
+                        <p class="text-lg">O "aperto de mão": como as conexões são configuradas, negociadas (oferta/resposta) e encerradas.</p>
+                        <p class="mt-2 text-sm font-mono bg-gray-200 p-2 rounded"><strong>Requisito:</strong> Navegadores WebRTC DEVEM implementar <span class="font-bold">RFC 8829 (JSEP)</span>.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 16: Grupos de Funcionalidade (3) -->
+        <div class="slide" data-slide="16">
+            <div class="w-full max-w-4xl text-left">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-8 animated-item">Grupos de Funcionalidade (Conclusão)</h2>
+                <div class="space-y-6">
+                    <div class="p-6 bg-white rounded-lg shadow-lg animated-item" style="transition-delay: 0.2s;">
+                        <h3 class="text-2xl font-bold text-pink-600 mb-2">5. Apresentação e Controle</h3>
+                        <p class="text-lg">Controle do usuário sobre seus dispositivos (câmera, microfone) e como a mídia é apresentada.</p>
+                        <p class="mt-2 text-sm font-mono bg-gray-200 p-2 rounded"><strong>Requisito:</strong> Implementar as APIs do W3C <span class="font-bold">webrtc</span> e <span class="font-bold">mediacapture-streams</span>.</p>
+                    </div>
+                    <div class="p-6 bg-white rounded-lg shadow-lg animated-item" style="transition-delay: 0.4s;">
+                        <h3 class="text-2xl font-bold text-lime-600 mb-2">6. Funções de Suporte ao Sistema Local</h3>
+                        <p class="text-lg">Funções que melhoram a experiência, mas não precisam de padronização entre pontas. Ex: Cancelamento de eco, controle de ganho (AGC).</p>
+                        <p class="mt-2 text-sm font-mono bg-gray-200 p-2 rounded"><strong>Requisito:</strong> Implementar as funções de processamento de áudio do <span class="font-bold">RFC 7874</span>.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 17: Interoperabilidade e Inovação -->
+        <div class="slide" data-slide="17">
+            <div class="w-full max-w-4xl text-center">
+                <h2 class="text-3xl md:text-4xl font-bold mb-8 animated-item">Interoperabilidade e Inovação</h2>
+                <div class="space-y-6 text-left text-lg">
+                    <div class="p-6 bg-white rounded-lg shadow-md animated-item" style="transition-delay: 0.2s;">
+                        <h3 class="font-bold text-xl mb-2 text-blue-700">Missão da IETF: Interoperabilidade</h3>
+                        <p>O benefício de um padrão é garantir que múltiplos produtos possam trabalhar juntos. O WebRTC busca exatamente isso.</p>
+                    </div>
+                    <div class="p-6 bg-white rounded-lg shadow-md animated-item" style="transition-delay: 0.4s;">
+                        <h3 class="font-bold text-xl mb-2 text-green-700">Prevenção de Falhas de Negociação</h3>
+                        <p>A existência de um conjunto de funções obrigatórias (codecs, protocolos) garante que a comunicação seja sempre possível, mesmo no nível mais básico.</p>
+                    </div>
+                    <div class="p-6 bg-white rounded-lg shadow-md animated-item" style="transition-delay: 0.6s;">
+                        <h3 class="font-bold text-xl mb-2 text-purple-700">Liberdade para Inovar</h3>
+                        <p>A especificação foca em interfaces, não em como são implementadas. Qualquer implementação que siga as regras é válida, permitindo inovação contínua.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 18: Considerações de Segurança -->
+        <div class="slide" data-slide="18">
+            <div class="w-full max-w-4xl">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-8 animated-item">Considerações de Segurança</h2>
+                <p class="text-center text-xl mb-8 animated-item" style="transition-delay: 0.2s;">A segurança é um pilar fundamental e multifacetado no WebRTC.</p>
+                <div class="grid md:grid-cols-3 gap-6 text-center">
+                    <div class="p-6 bg-red-100 rounded-lg shadow-md animated-item" style="transition-delay: 0.4s;">
+                        <h3 class="font-bold text-xl mb-2">Segurança dos Componentes</h3>
+                        <p>Proteger o navegador e servidores contra novas vulnerabilidades.</p>
+                    </div>
+                    <div class="p-6 bg-yellow-100 rounded-lg shadow-md animated-item" style="transition-delay: 0.6s;">
+                        <h3 class="font-bold text-xl mb-2">Segurança dos Canais</h3>
+                        <p>Garantir a criptografia ponta a ponta e a verificação dos parâmetros de segurança.</p>
+                    </div>
+                    <div class="p-6 bg-blue-100 rounded-lg shadow-md animated-item" style="transition-delay: 0.8s;">
+                        <h3 class="font-bold text-xl mb-2">Segurança das Identidades</h3>
+                        <p>Verificar quem são os participantes ou garantir o anonimato quando necessário.</p>
+                    </div>
+                </div>
+                <p class="text-center mt-8 text-lg bg-gray-200 p-4 rounded-lg animated-item" style="transition-delay: 1s;">A análise completa e os requisitos de segurança estão nos documentos <strong class="text-red-700">RFC 8826</strong> e <strong class="text-red-700">RFC 8827</strong>.</p>
+            </div>
+        </div>
+
+        <!-- Slide 19: Conclusão -->
+        <div class="slide" data-slide="19">
+            <div class="w-full max-w-4xl text-left">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-8 animated-item">Conclusão: Os Pilares do WebRTC com RFC 8825</h2>
+                <ul class="space-y-4 text-lg list-disc list-inside">
+                    <li class="animated-item" style="transition-delay: 0.2s;">O <strong>RFC 8825</strong> é a espinha dorsal normativa para os protocolos WebRTC.</li>
+                    <li class="animated-item" style="transition-delay: 0.4s;">Ele garante a <strong>interoperabilidade</strong> entre diferentes implementações de navegadores e dispositivos.</li>
+                    <li class="animated-item" style="transition-delay: 0.6s;">Define a arquitetura onde a <strong>mídia flui diretamente</strong> (peer-to-peer) e a sinalização passa por servidores.</li>
+                    <li class="animated-item" style="transition-delay: 0.8s;">Descreve os grupos de funcionalidade essenciais, especificando o que <strong>DEVEM</strong> implementar para garantir uma experiência rica e segura.</li>
+                    <li class="animated-item" style="transition-delay: 1s;">É o alicerce para que aplicações web possam oferecer comunicação de áudio, vídeo e dados de forma <strong>padronizada e universal</strong>.</li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Navegação -->
+    <div class="fixed bottom-0 left-0 right-0 p-4 flex justify-center items-center space-x-4 z-20">
+        <button id="prevBtn" class="btn-nav">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <span id="slide-counter" class="text-gray-600 font-medium">1 / 19</span>
+        <button id="nextBtn" class="btn-nav">
+             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const slideCounter = document.getElementById('slide-counter');
+        let currentSlide = 0;
+        const totalSlides = slides.length;
+
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active', 'previous');
+                if (i === index) {
+                    slide.classList.add('active');
+                } else if (i < index) {
+                    slide.classList.add('previous');
+                }
+            });
+            slideCounter.textContent = `${index + 1} / ${totalSlides}`;
+            
+            // Gerencia botões
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === totalSlides - 1;
+            prevBtn.style.opacity = index === 0 ? '0.5' : '1';
+            nextBtn.style.opacity = index === totalSlides - 1 ? '0.5' : '1';
+        }
+
+        function next() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        }
+
+        function prev() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        }
+
+        nextBtn.addEventListener('click', next);
+        prevBtn.addEventListener('click', prev);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') {
+                next();
+            } else if (e.key === 'ArrowLeft') {
+                prev();
+            }
+        });
+
+        // Inicia a apresentação
+        showSlide(currentSlide);
+    </script>
+
+</body>
+</html>
